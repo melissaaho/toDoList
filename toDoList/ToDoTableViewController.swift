@@ -9,13 +9,24 @@ import UIKit
 
 class ToDoTableViewController: UITableViewController {
 
-    var toDos : [ToDo] = [] //creates an empty array of our new objects we made
-    
+    //var toDos : [ToDo] = [] //creates an empty array of our new objects we made
+    var toDos : [ToDoCD] = []
     override func viewDidLoad() {
         super.viewDidLoad()
-        toDos = createToDos()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+      getToDos()
+    }
+    func getToDos() {
+      if let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext {
 
+        if let coreDataToDos = try? context.fetch(ToDoCD.fetchRequest()) as? [ToDoCD] {
+                toDos = coreDataToDos
+                tableView.reloadData()
+        }
+      }
+    }
     
     func createToDos() -> [ToDo]{
         let crime = ToDo()
@@ -42,17 +53,19 @@ class ToDoTableViewController: UITableViewController {
 
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-        
-        let toDo = toDos[indexPath.row]
-        
-        if toDo.important{
-            cell.textLabel?.text = "🍓" + toDo.name
-        }else{
+      let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
+
+      let toDo = toDos[indexPath.row]
+
+      if let name = toDo.name {
+        if toDo.important {
+            cell.textLabel?.text = "❗️" + name
+        } else {
             cell.textLabel?.text = toDo.name
         }
-        
-        return cell
+      }
+
+      return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -108,7 +121,7 @@ class ToDoTableViewController: UITableViewController {
     }
 
         if let completeVC = segue.destination as? completeToDoViewController {
-            if let toDo = sender as? ToDo {
+            if let toDo = sender as? ToDoCD {
               completeVC.selectedToDo = toDo
               completeVC.previousVC = self
             }
